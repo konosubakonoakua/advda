@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>YoloDemo</title>
+    <script src="http://libs.baidu.com/jquery/2.0.3/jquery.min.js"></script>
+</head>
+
+<body>
+    <form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo">
+        <label>File to stash:</label>
+        <input type="file" name="file" required />
+    </form>
+    <input type="button" id="uploadBTN" value="Stash the file!"></input>
+    <div id="output"></div>
+</body>
+
+<script type="text/javascript">
+    $(function(){
+    $('#uploadBTN').on('click', function(){ 
+        var formData = new FormData();
+        formData.append('file', $('input[type=file]')[0].files[0]);
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8888/yolo/prediction',
+            enctype: 'multipart/form-data',
+            data: formData,
+            success: function(data){
+                $("#output").html("<img id='img1'>");
+                // $("#img1").attr('src', "data:image/jpeg;base64," + data["image_with_bboxes"]);
+                $("#img1").attr('src', "http://localhost:8888/imgs/pred/" + data["image_url"]);
+            },
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+    });
+});
+</script>
+
+</html>
