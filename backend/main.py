@@ -1,12 +1,16 @@
+# Path hack
+import sys
+sys.path.insert(0, "../")
+
 # Imports
 from fastapi import FastAPI, HTTPException
-import uvicorn
-from starlette.responses import FileResponse
-
-from backend import router_yolov5
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
 from typing import Optional
+import uvicorn
+
+from backend import router_yolov5
 
 # Load the model
 
@@ -40,4 +44,6 @@ async def get_img_file(filename: Optional[str] = None):
 
 
 if __name__ == "__main__":
+    for p in sys.path:
+        print(p)
     uvicorn.run(app=app, host="localhost", port=8888)
