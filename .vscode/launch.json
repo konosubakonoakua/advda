@@ -10,9 +10,9 @@
             "name": "deploy",
             "type": "python",
             "request": "launch",
-            "program": "./backend/main.py",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "program": "main.py",
+            "cwd": "${workspaceFolder}/backend",
+            "console": "integratedTerminal",
         }
     ]
 }

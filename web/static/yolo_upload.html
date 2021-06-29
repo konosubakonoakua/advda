@@ -9,10 +9,10 @@
 
 <body>
     <form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo">
-        <label>File to stash:</label>
+        <label>File to upload:</label>
         <input type="file" name="file" required />
     </form>
-    <input type="button" id="uploadBTN" value="Stash the file!"></input>
+    <input type="button" id="uploadBTN" value="upload"></input>
     <div id="output"></div>
 </body>
 
@@ -21,15 +21,16 @@
     $('#uploadBTN').on('click', function(){ 
         var formData = new FormData();
         formData.append('file', $('input[type=file]')[0].files[0]);
+        console.log(formData.get('file'));
         $.ajax({
             type: 'POST',
-            url: 'http://localhost:8888/yolo/prediction',
+            url: 'http://localhost:23333/yolo/prediction',
             enctype: 'multipart/form-data',
             data: formData,
             success: function(data){
                 $("#output").html("<img id='img1'>");
                 // $("#img1").attr('src', "data:image/jpeg;base64," + data["image_with_bboxes"]);
-                $("#img1").attr('src', "http://localhost:8888/imgs/pred/" + data["image_url"]);
+                $("#img1").attr('src', "http://localhost:23333/imgs/pred/" + data["image_url"]);
             },
             cache: false,
             contentType: false,
