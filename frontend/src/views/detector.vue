@@ -1,26 +1,55 @@
 <template>
   <n-grid x-gap="12" :cols="2">
     <n-grid-item>
-      <n-card ref="cardOrigin" title="原始图片">
+      <n-card ref="cardOrigin" title="图片上传 & 模型选择">
         <template #cover>
           <n-image ref="cardCover" :src="imageOriginUrl" />
         </template>
-        <n-button
-          type="info"
-          ghost
-          :disabled="!fileListLength"
-          @click="handleClick"
-          style="margin-bottom: 12px"
-        >
-          开始预测
-        </n-button>
+        <n-space vertical>
+          <n-radio-group
+            name="modelSelectGroup"
+            style="margin-bottom: 6px"
+            @update:value="
+              (value) => {
+                modelSelected = value;
+              }
+            "
+          >
+            <n-radio-button v-for="model in models" :key="model" :value="model">
+              {{ model }}
+            </n-radio-button>
+          </n-radio-group>
+          <n-button
+            :loading="isPreBtnLoading"
+            type="info"
+            ghost
+            :disabled="!fileListLength"
+            @click="btnStartInference"
+            style="margin-bottom: 12px"
+          >
+            <template #icon>
+              <n-icon>
+                <DiceOutline />
+              </n-icon>
+            </template>
+            开始预测
+          </n-button>
+        </n-space>
+
         <n-upload
           accept=".png, .jpg, .jpeg"
-          @change="handleChange"
+          @change="handleUploadChange"
           :default-upload="false"
           ref="upload"
         >
-          <n-button ghost type="primary">选择图片</n-button>
+          <n-button ghost type="primary">
+            <template #icon>
+              <n-icon>
+                <AttachOutline />
+              </n-icon>
+            </template>
+            选择图片
+          </n-button>
         </n-upload>
       </n-card>
     </n-grid-item>
@@ -33,7 +62,6 @@
           <n-data-table
             ref="tablePred"
             :max-height="250"
-            
             virtual-scroll
             :columns="tabCols"
             :data="tabData"
@@ -42,7 +70,44 @@
       </n-card>
     </n-grid-item>
   </n-grid>
-  <n-divider />
+  <n-divider dashed />
+  <n-space vertical>
+    <n-card title="对抗样本算法选择">
+      <n-space vertical>
+        <!-- <n-button
+        circle
+        ghost
+        type="info"
+        color="#ff69b4"
+        @click="setValidAdvMethodVisible"
+      >
+        <template #icon>
+          <n-icon>
+            <HourglassOutline />
+          </n-icon>
+        </template>
+      </n-button> -->
+        <n-select
+          @update:value="setValidAdvMethodVisible"
+          multiple
+          :options="options"
+          ref="advAlgorithmSelected"
+        />
+        <!-- <n-select v-model:value="value" multiple disabled :options="options" /> -->
+      </n-space>
+    </n-card>
+    <n-divider dashed />
+    <n-card title="对抗样本算法参数设置">
+      <n-space vertical>
+        <n-card v-if="isFgsmEanbled" title="FGSM">
+          <n-input-number
+            v-model:value="valueInputNum1"
+            :validator="validatorInputNum1"
+          />
+        </n-card>
+      </n-space>
+    </n-card>
+  </n-space>
 </template>
 
 
@@ -59,14 +124,54 @@ import {
   NIcon,
   NTable,
   NDataTable,
+  NSelect,
+  NInputNumber,
+  NRadioGroup,
+  NRadioButton,
+  NRadio,
 } from "naive-ui";
 import axios from "axios";
 import { useMessage, useLoadingBar } from "naive-ui";
 import imageNAUrl from "../assets/NA.png";
-import { HourglassOutline } from "@vicons/ionicons5";
+import {
+  HourglassOutline,
+  AlertCircleOutline,
+  AccessibilityOutline,
+  AttachOutline,
+  DiceOutline,
+} from "@vicons/ionicons5";
 </script>
 
 <script>
+const models = ["model_fasterrcnn", "model_yolov5"];
+let options = [
+  {
+    label: "FGSM-based",
+    value: "fgsm-based",
+    disabled: true,
+  },
+  {
+    label: "FGSM",
+    value: "fgsm",
+  },
+  {
+    label: "IFGSM",
+    value: "ifgsm",
+  },
+  {
+    label: "PIFGSM",
+    value: "pi-fgsm",
+  },
+  {
+    label: "DE-based",
+    value: "de-based",
+    disabled: true,
+  },
+  {
+    label: "OnePixelAttack",
+    value: "onepixel",
+  },
+];
 let tabCols = [
   {
     title: "键",
@@ -88,11 +193,12 @@ let tabCols = [
     title: "置信度",
     key: "confidence",
     sorter: (row1, row2) => row1.confidence - row2.confidence,
-  },  
+  },
   {
     title: "区域",
     key: "area",
-    sorter: (row1, row2) => row1.area[0] * row1.area[1] - row2.area[0] * row2.area[1],
+    sorter: (row1, row2) =>
+      row1.area[0] * row1.area[1] - row2.area[0] * row2.area[1],
   },
 ];
 
@@ -111,13 +217,24 @@ let tabData = [
   //   confidence: 0.45,
   //   area: [123, 124]
   // }
-]
+];
 export default {
+  components: {
+    AccessibilityOutline,
+    HourglassOutline,
+    AlertCircleOutline,
+  },
   data() {
     return {
+      models: models,
+      modelSelected: null,
+      isFgsmEanbled: false,
+      // advMethodsSelected: null,
+      options: options,
       tabData: tabData,
       tabCols: tabCols,
       // pagination: {pageSize: 5},
+      isPreBtnLoading: false,
       fileListLength: 0,
       fileList: [],
       message: useMessage(),
@@ -127,7 +244,12 @@ export default {
     };
   },
   methods: {
-
+    setValidAdvMethodVisible(value) {
+      if (value == null || value == undefined) {
+        return;
+      }
+      this.isFgsmEanbled = value.includes("fgsm");
+    },
     errLog(msg, duration) {
       this.message.error(msg, {
         closable: true,
@@ -135,11 +257,11 @@ export default {
       });
       this.loadingBar.error();
     },
-    handleChange({ fileList }) {
+    handleUploadChange({ fileList }) {
       this.fileList = fileList;
       this.fileListLength = fileList.length;
       if (this.fileListLength > 1) {
-        this.message.info("抱歉啊，目前只能上传一张图，已清除上次图片");
+        // this.message.info("抱歉啊，目前只能上传一张图，已清除上次图片");
         this.fileList.shift();
       }
       if (this.fileListLength > 0) {
@@ -151,17 +273,25 @@ export default {
       this.tabData = [];
       this.imagePredUrl = imageNAUrl;
     },
-    handleClick() {
-      if (this.fileListLength > 1) {
-        this.message.error("抱歉啊，目前只能上传一张图，请删除多余图片。");
+    btnStartInference() {
+      let imagePostUrl = null;
+      if (this.modelSelected == null) {
+        this.message.error("请选择模型");
+        return;
+      } else if (this.modelSelected == "model_fasterrcnn") {
+        imagePostUrl = "http://localhost:23333/fasterrcnn/prediction";
+      } else if (this.modelSelected == "model_yolov5") {
+        imagePostUrl = "http://localhost:23333/yolo/prediction";
+      } else {
+        this.message.error("模型错误");
         return;
       }
       let formData = new FormData();
       formData.append("file", this.fileList[0].file);
       this.loadingBar.start();
-
+      this.isPreBtnLoading = true;
       axios
-        .post("http://localhost:23333/yolo/prediction", formData, {
+        .post(imagePostUrl, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -187,13 +317,16 @@ export default {
         .catch((e) => {
           console.log(e.toString());
           this.errLog(e.toString(), 30000);
+        })
+        .finally(() => {
+          this.isPreBtnLoading = false;
         });
     },
     fillTablePred(data) {
       this.tabData = [];
       const arrBBoxes = data["boudingboxes"];
       console.log(arrBBoxes);
-      if (!arrBBoxes)  {
+      if (!arrBBoxes) {
         return;
       }
       const arrClasses = data["classes"];
@@ -207,11 +340,12 @@ export default {
           name: clz["name"],
           iid: clz["id"],
           confidence: conf,
-          area: "placeholder"
+          area: "placeholder",
         });
       }
-    }
+    },
   },
+  computed: {},
 };
 </script>
 
