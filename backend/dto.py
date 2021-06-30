@@ -13,7 +13,7 @@ class ClassPred(BaseModel):
   name: str
   # nid: str
 
-class Prediction(BaseModel):
+class PredictionDetector(BaseModel):
   filename: str
   contenttype: str
   boudingboxes: List[BoudingBox] = []
@@ -21,3 +21,10 @@ class Prediction(BaseModel):
   confidences: List[float] = []
   image_with_bboxes: Optional[bytes] = None
   image_url: str = ""
+
+class PredictionClassifier(BaseModel):
+  filename: str
+  contenttype: str
+  classes: List = []
+  iids: List = []
+  confidences: List[float] = []

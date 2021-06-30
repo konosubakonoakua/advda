@@ -11,7 +11,7 @@ import numpy as np
 
 # from numpy import short, source
 # from requests import models
-from backend.dto import Prediction
+from backend.dto import PredictionDetector
 import torch
 from fastapi import APIRouter
 from backend import cfg
@@ -23,11 +23,11 @@ router = APIRouter(prefix="/yolo", tags=["yolo"])
 
 model_yolo = torch.hub.load(cfg.MODEL_REPO_YOLO, 'custom', path=cfg.MODEL_PATH_YOLO, source="local")
 # model_yolo = torch.hub.load('ultralytics/yolov5', 'custom', path=cfg.MODEL_PATH_YOLO)
-# model_yolo = model_yolo.half().eval().cuda()
+model_yolo = model_yolo.half().eval().cuda()
 
 
 # Define the /prediction route
-@router.post('/prediction', response_model=Prediction)
+@router.post('/prediction', response_model=PredictionDetector)
 async def prediction_route(file: UploadFile = File(...)):
     # Ensure that this is an image
     if file.content_type.startswith('image/') is False:
