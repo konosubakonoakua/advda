@@ -13,6 +13,7 @@ import uvicorn
 
 from backend import cfg
 from backend import router_yolov5
+from backend import router_resnet
 
 # Load the model
 
@@ -40,6 +41,7 @@ app.add_middleware(
 
 # Add routers
 app.include_router(router_yolov5.router)
+app.include_router(router_resnet.router)
 
 # Mount folder
 app.mount("/static", StaticFiles(directory="../web/static"), name="static")
