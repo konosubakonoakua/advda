@@ -1,23 +1,21 @@
-# Path hack
 import sys
 sys.path.insert(0, "../")
-
-# Imports
-from fastapi.middleware.cors import CORSMiddleware # CORS
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from starlette.responses import FileResponse
-from typing import Optional
 import uvicorn
-
-from backend import cfg
-from backend import router_yolov5
+from typing import Optional
+from starlette.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # CORS
 from backend import router_resnet
+from backend import router_yolov5
+from backend import cfg
+from backend.log import setup_logging, LOG_LEVEL, Server, Config
+from backend.applog import read_logging_config, setup_logging
 
-# Load the model
+logconfig_dict = read_logging_config("applog/logging.yaml")
+setup_logging(logconfig_dict)
 
-# Get the input shape for the model layer
 
 # Define the FastAPI app
 app = FastAPI()
@@ -44,7 +42,7 @@ app.include_router(router_yolov5.router)
 app.include_router(router_resnet.router)
 
 # Mount folder
-app.mount("/static", StaticFiles(directory="../web/static"), name="static")
+# app.mount("/static", StaticFiles(directory="../web/static"), name="static")
 
 
 # Define the main route
@@ -55,7 +53,7 @@ async def root_route():
 
 
 # images response
-@app.get("/imgs/pred/{filename}")
+@app.get("/imgs/{filename}")
 async def get_img_file(filename: Optional[str] = None):
     if filename is not None:
         # img: PIL.Image.Image = Image.open(f"web/imgs/{filename}")
@@ -65,6 +63,20 @@ async def get_img_file(filename: Optional[str] = None):
 
 
 if __name__ == "__main__":
-    # for p in sys.path:
-    #     print(p)
+    # setup_logging()
     uvicorn.run(app=app, host=cfg.SERVER_HOST, port=cfg.SERVER_PORT)
+
+    # server = Server(
+    #     Config(
+    #         "main:app",
+    #         host=cfg.SERVER_HOST,
+    #         port=cfg.SERVER_PORT,
+    #         log_level=LOG_LEVEL,
+    #     ),
+    # )
+
+    # # setup logging last, to make sure no library overwrites it
+    # # (they shouldn't, but it happens)
+    # setup_logging()
+
+    # server.run()

@@ -1,27 +1,24 @@
-# from importlib.resources import path
-# from pprint import pprint
-from asyncio.log import logger
+# import warnings
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-from fastapi import File, UploadFile, HTTPException
-from fastapi.responses import HTMLResponse
-from PIL import Image
-# from typing import List
-import io
-import numpy as np
-
-# from numpy import short, source
-# from requests import models
-from backend.dto import PredictionDetector
-import torch
-from fastapi import APIRouter
-from backend import cfg
-# import torchvision
-# import base64
+# import logging
 from backend.yolov5.models.common import Detections
+from backend import cfg
+from fastapi import APIRouter
+import torch
+from backend.dto import PredictionDetector
+import numpy as np
+import io
+from PIL import Image
+from fastapi.responses import HTMLResponse
+from fastapi import File, UploadFile, HTTPException
+# from backend.log import logger
+from backend.applog import logger
 
 router = APIRouter(prefix="/yolo", tags=["yolo"])
 
-model_yolo = torch.hub.load(cfg.MODEL_REPO_YOLO, 'custom', path=cfg.MODEL_PATH_YOLO, source="local")
+model_yolo = torch.hub.load(
+    cfg.MODEL_REPO_YOLO, 'custom', path=cfg.MODEL_PATH_YOLO, source="local")
 # model_yolo = torch.hub.load('ultralytics/yolov5', 'custom', path=cfg.MODEL_PATH_YOLO)
 model_yolo = model_yolo.half().eval().cuda()
 
@@ -31,7 +28,8 @@ model_yolo = model_yolo.half().eval().cuda()
 async def prediction_route(file: UploadFile = File(...)):
     # Ensure that this is an image
     if file.content_type.startswith('image/') is False:
-        raise HTTPException(status_code=400, detail=f'File \'{file.filename}\' is not an image.')
+        raise HTTPException(
+            status_code=400, detail=f'File \'{file.filename}\' is not an image.')
 
     try:
         # Read image contents
@@ -98,7 +96,7 @@ def make_pred_response(file: UploadFile, res: Detections) -> dict:
         'classes': clz,
         'confidences': confs,
         'image_with_bboxes': img_base64,
-        'image_url': f"pred_{file.filename}"
+        'image_url': img_path
     }
 
 
