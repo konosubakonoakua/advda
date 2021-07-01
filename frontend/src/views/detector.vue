@@ -307,7 +307,7 @@ export default {
             this.message.success("预测成功");
             this.loadingBar.finish();
             this.imagePredUrl =
-              "http://localhost:23333/imgs/pred/" + response.data["image_url"];
+              "http://localhost:23333/imgs/" + response.data["image_url"];
             this.fillTablePred(response.data);
           } else {
             console.table(response.data);
