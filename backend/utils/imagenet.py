@@ -1,6 +1,7 @@
 import json
 import os
 from typing import List
+
 def get_imagenet_classes() -> dict:
     # print(os.path.abspath("."))
     # print(os.path.curdir)
