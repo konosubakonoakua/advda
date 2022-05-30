@@ -2,7 +2,6 @@
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from PIL import Image
-import torch
 import io
 import os
 import cv2
@@ -52,12 +51,6 @@ async def prediction_route(file: UploadFile = File(...)):
         # Convert from RGBA to RGB *to avoid alpha channels*
         if pil_image.mode == 'RGBA':
             pil_image = pil_image.convert('RGB')
-
-        # Convert image into grayscale *if expected*
-
-        # Convert image into numpy format
-
-        # Scale data (depending on your model)
 
         # Generate prediction
         res: Detections = model(pil_image)

@@ -1,1 +1,1 @@
-model checkpoints file goes here
+model checkpoints files go here

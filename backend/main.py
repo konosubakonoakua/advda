@@ -20,18 +20,20 @@ setup_logging(logconfig_dict)
 # Define the FastAPI app
 app = FastAPI()
 
-# CORS
-origins = [
-    # "http://localhost.tiangolo.com",
-    # "https://localhost.tiangolo.com",
-    "http://localhost",
-    "http://localhost:23333",
-    "http://localhost:4000",
-]
+# move to cfg.py
+# # CORS
+# origins = [
+#     # "http://localhost.tiangolo.com",
+#     # "https://localhost.tiangolo.com",
+#     "http://localhost:40000",
+#     "http://localhost:23333",
+#     "http://192.168.224.1",
+#     "http://127.0.0.1",
+# ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=cfg.ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

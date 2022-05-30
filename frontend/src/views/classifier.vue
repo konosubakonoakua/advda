@@ -157,7 +157,6 @@
   </n-grid>
 </template>
 
-
 <script setup>
 import {
   NButton,
@@ -360,6 +359,7 @@ export default {
     },
     btnStartAdvAttack() {
       let imagePostUrl = "http://localhost:23333/resnet/18/attack/fgsm";
+      this.imagePredUrlAdv = this.imageNAUrl;
       // if (this.modelSelected == null) {
       //   this.message.error("请选择模型");
       //   return;
@@ -413,7 +413,6 @@ export default {
         });
     },
     fillTablePred(src, data) {
-      // this.tabData = [];
       const clz = data["classes"];
       const confs = data["confidences"];
       const iids = data["iids"];
@@ -433,9 +432,6 @@ export default {
     plotBarChart(barDiv, data) {
       const clz = data["classes"];
       const confs = data["confidences"];
-      // let xValue = ["Product A", "Product B", "Product C"];
-
-      // let yValue = [20, 14, 23];
 
       let trace1 = {
         x: clz,
